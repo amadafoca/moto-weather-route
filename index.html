@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Moto Weather Route</title>
-<meta name="description" content="Previsao de chuva hora a hora para viagens de moto no Brasil">
+<meta name="description" content="Previsão de chuva hora a hora para suas viagens">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
@@ -109,7 +109,7 @@ a { color: var(--accent); text-decoration: none; }
 <div class="form-wrap" id="form-screen">
   <div class="logo">
     <h1>&#127949;&#65039; Moto Weather Route</h1>
-    <p>Previsao de chuva trecho a trecho para sua viagem de moto</p>
+    <p>Previsão de chuva trecho a trecho para sua viagem</p>
   </div>
   <form id="route-form" autocomplete="off">
     <div class="field">
@@ -134,7 +134,7 @@ a { color: var(--accent); text-decoration: none; }
       <label>Velocidade media (km/h)</label>
       <input type="number" id="velocidade" value="90" min="40" max="160" step="10">
     </div>
-    <button type="submit" class="btn-main" id="submit-btn">Consultar previsao</button>
+    <button type="submit" class="btn-main" id="submit-btn">Consultar previsão</button>
     <div class="error-msg" id="error-msg"></div>
     <p class="speed-note">Dados: Open-Meteo &middot; Rota: OSRM/OpenStreetMap &middot; Gratuito, sem cadastro</p>
   </form>
@@ -235,7 +235,7 @@ function genWhatsApp(dados, oN, dN, date, hora, km) {
   else if (mx < 5) v = '\u26a0\ufe0f Chuva leve em trechos';
   else if (mx < 15) v = '\ud83c\udf27\ufe0f Chuva moderada \u2014 leve capa';
   else v = '\ud83d\udea8 Chuva forte \u2014 considere adiar';
-  var t = '\ud83c\udfcd\ufe0f *Previsao de Chuva \u2014 ' + oN + ' \u2192 ' + dN + '*\n';
+  var t = '\ud83c\udfcd\ufe0f *Previsão de Chuva \u2014 ' + oN + ' \u2192 ' + dN + '*\n';
   t += diaSemana(date) + ' ' + fmtDate(date) + ' \u2022 Saida ' + hora + ' \u2022 ~' + Math.round(km) + 'km\n\n';
   t += '*' + v + '*\n\n\ud83d\udccd *Trecho a trecho:*\n\n';
   dados.forEach(function(p) {
@@ -317,7 +317,7 @@ function buildResults(dados, routeGeo, oN, dN, date, hora, km) {
   if (mx < 1) dicas.push('Nao precisa capa \u2014 jaqueta impermeavel resolve');
   else if (mx < 5) dicas.push('Leve jaqueta impermeavel');
   else dicas.push('Equipamento de chuva completo recomendado');
-  dicas.push('Reconfirme a previsao na vespera');
+  dicas.push('Reconfirme a previsão na vespera');
 
   var html = '';
   html += '<div class="header">';
@@ -339,7 +339,7 @@ function buildResults(dados, routeGeo, oN, dN, date, hora, km) {
   html += '<div style="font-size:26px;flex-shrink:0">' + v.i + '</div>';
   html += '<div><div style="font-weight:600;font-size:14px;color:' + v.c + '">' + v.t + '</div>';
   html += '<div style="color:#8b90a0;font-size:12px;margin-top:3px">Max ' + mx.toFixed(1) + 'mm \u00b7 ' + secos + '/' + dados.length + ' pontos secos</div></div></div>';
-  html += '<div class="sec-title">Previsao por trecho</div>';
+  html += '<div class="sec-title">Previsão por trecho</div>';
   html += '<div class="timeline"><div class="tl-line"></div>';
 
   dados.forEach(function(p, idx) {
@@ -490,7 +490,7 @@ document.getElementById('route-form').addEventListener('submit', function(e) {
         return chain.then(function() {
           showLoad('Estimando horarios...', spd + ' km/h media');
           pts = estimateTimes(pts, route.geometry, depH, spd);
-          showLoad('Consultando previsao de chuva...', 'Open-Meteo \u00b7 ' + pts.length + ' pontos');
+          showLoad('Consultando previsão de chuva...', 'Open-Meteo \u00b7 ' + pts.length + ' pontos');
           return getWeather(pts, dt);
         }).then(function(dados) {
           hideLoad();
@@ -505,7 +505,7 @@ document.getElementById('route-form').addEventListener('submit', function(e) {
     })
     .finally(function() {
       btn.disabled = false;
-      btn.textContent = 'Consultar previsao';
+      btn.textContent = 'Consultar previsão';
     });
 });
 
