@@ -28,7 +28,7 @@
 body { font-family: 'DM Sans', system-ui, sans-serif; background: var(--bg); color: var(--txt); min-height: 100vh; }
 a { color: var(--accent); text-decoration: none; }
 
-.hero { position: relative; min-height: 62vh; display: flex; align-items: flex-end; padding: 24px 16px; background: url('./assets/banner-mobile.png') center center / cover no-repeat; }
+.hero { position: relative; min-height: 62vh; display: flex; align-items: flex-end; padding: 24px 16px; background: url('./assets/banner_mobile.png') center center / cover no-repeat; }
 .hero::before { content: ''; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(10,12,18,0.22) 0%, rgba(10,12,18,0.58) 48%, rgba(10,12,18,0.88) 100%); }
 .hero-inner { position: relative; z-index: 1; width: 100%; max-width: 1080px; margin: 0 auto; }
 .hero-card { max-width: 560px; background: linear-gradient(180deg, rgba(15,17,23,0.64), rgba(15,17,23,0.78)); border: 1px solid rgba(255,255,255,0.09); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border-radius: 28px; padding: 28px 24px; box-shadow: 0 20px 60px rgba(0,0,0,0.28); }
@@ -124,7 +124,7 @@ a { color: var(--accent); text-decoration: none; }
 .spinner { width: 36px; height: 36px; border: 3px solid var(--brd); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
 @media (min-width: 700px) {
-  .hero { min-height: 68vh; padding: 36px 24px; background-image: url('./assets/banner-desktop.png'); }
+  .hero { min-height: 68vh; padding: 36px 24px; background-image: url('./assets/banner_desktop.png'); }
   .hero-card { padding: 34px 32px; }
 }
 @media (max-width: 520px) {
