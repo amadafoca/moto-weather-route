@@ -44,14 +44,27 @@ body {
 a { color: var(--accent); text-decoration: none; }
 
 /* Brand-first header now uses the shipped Trajeto assets so the page matches the saved identity. */
-.top-shell { max-width: 620px; margin: 0 auto; padding: 14px 16px 0; }
-.brand-header { padding: 4px 2px 0; }
-.brand-lockup { display: flex; align-items: center; gap: 14px; }
+.top-shell {
+  max-width: 620px;
+  margin: 0 auto;
+  padding: 18px 16px 0;
+  position: relative;
+}
+.top-shell::before {
+  content: '';
+  position: absolute;
+  inset: -40px 18% auto 8%;
+  height: 120px;
+  background: radial-gradient(circle, rgba(124,198,255,0.10) 0%, rgba(124,198,255,0) 72%);
+  pointer-events: none;
+}
+.brand-header { position: relative; z-index: 1; padding: 2px 2px 0; }
+.brand-lockup { display: flex; align-items: center; gap: 12px; }
 .brand-tile {
   position: relative;
-  width: 58px;
-  height: 58px;
-  border-radius: 20px;
+  width: 52px;
+  height: 52px;
+  border-radius: 18px;
   flex-shrink: 0;
   display: grid;
   place-items: center;
@@ -76,36 +89,28 @@ a { color: var(--accent); text-decoration: none; }
 }
 .brand-copy { min-width: 0; display: flex; flex-direction: column; }
 .brand-wordmark {
-  width: min(228px, 54vw);
+  width: min(198px, 46vw);
   height: auto;
   display: block;
 }
 .brand-tagline {
   color: var(--dim);
-  font-size: 12px;
-  line-height: 1.45;
-  margin-top: 5px;
+  font-size: 11px;
+  line-height: 1.35;
+  margin-top: 4px;
   padding-left: 2px;
-  letter-spacing: 0.01em;
+  letter-spacing: 0.02em;
 }
 
-.form-wrap { max-width: 620px; margin: 0 auto; padding: 10px 16px 28px; }
-/* Functional copy stays intact, but spacing and rhythm now follow the new brand system. */
-.intro-block { padding: 0 2px 12px; }
+.form-wrap { max-width: 620px; margin: 0 auto; padding: 8px 16px 28px; }
+.intro-block { padding: 0 2px 10px; }
 .intro-title {
-  font-size: clamp(28px, 6vw, 40px);
-  line-height: 1.01;
-  letter-spacing: -0.06em;
-  font-weight: 700;
-  max-width: 12ch;
-  color: #f5f7ff;
-}
-.intro-subtitle {
-  color: var(--dim);
-  font-size: 13px;
-  line-height: 1.58;
-  max-width: 37ch;
-  margin-top: 8px;
+  font-size: clamp(16px, 2.2vw, 20px);
+  line-height: 1.35;
+  letter-spacing: -0.02em;
+  font-weight: 500;
+  max-width: 28ch;
+  color: #d7e1f6;
 }
 
 .form-panel {
@@ -243,22 +248,22 @@ a { color: var(--accent); text-decoration: none; }
 @keyframes spin { to { transform: rotate(360deg); } }
 @media (min-width: 700px) {
   .top-shell, .form-wrap { max-width: 860px; }
-  .brand-wordmark { width: 264px; }
-  .top-shell { padding-top: 16px; }
-  .brand-header { padding-top: 6px; }
-  .form-wrap { padding-top: 12px; }
-  .intro-title { max-width: 13ch; }
+  .top-shell { padding-top: 22px; }
+  .brand-wordmark { width: 214px; }
+  .form-wrap { padding-top: 10px; }
+  .intro-title { max-width: 34ch; }
   .form-panel { padding: 18px; }
 }
 @media (max-width: 520px) {
-  .top-shell { padding: 12px 14px 0; }
-  .brand-lockup { align-items: center; gap: 12px; }
-  .brand-tile { width: 52px; height: 52px; border-radius: 18px; }
-  .brand-wordmark { width: min(198px, 54vw); }
-  .brand-tagline { max-width: 18ch; }
+  .top-shell { padding: 16px 14px 0; }
+  .top-shell::before { inset: -34px 4% auto 0; height: 96px; }
+  .brand-lockup { align-items: center; gap: 11px; }
+  .brand-tile { width: 48px; height: 48px; border-radius: 17px; }
+  .brand-wordmark { width: min(182px, 52vw); }
+  .brand-tagline { max-width: 17ch; }
   .form-wrap { padding: 8px 14px 26px; }
-  .intro-block { padding-bottom: 10px; }
-  .intro-title { font-size: clamp(26px, 8vw, 32px); }
+  .intro-block { padding-bottom: 8px; }
+  .intro-title { font-size: 15px; max-width: 24ch; }
   .form-panel { padding: 14px; border-radius: 22px; }
 }
 </style>
@@ -281,10 +286,8 @@ a { color: var(--accent); text-decoration: none; }
 </div>
 
 <div class="form-wrap" id="form-screen">
-  <!-- Functional copy comes after the brand so the value proposition leads directly into the form. -->
   <section class="intro-block" aria-label="Resumo do produto">
-    <h1 class="intro-title">Veja o clima do seu trajeto antes de sair</h1>
-    <p class="intro-subtitle">Informe origem, destino, horário e velocidade média para visualizar a previsão de chuva ao longo da rota.</p>
+    <p class="intro-title">Veja o clima do seu trajeto antes de sair</p>
   </section>
 
   <div class="form-panel">
