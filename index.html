@@ -41,9 +41,14 @@ a { color: var(--accent); text-decoration: none; }
 .logo p { color: var(--dim); font-size: 13px; margin-top: 6px; }
 .field { margin-bottom: 14px; }
 .field label { display: block; font-size: 12px; font-weight: 600; color: var(--dim); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; }
+.field-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 6px; }
+.field-head label { margin-bottom: 0; }
 .field input { width: 100%; background: var(--card); border: 1px solid var(--brd); border-radius: 10px; padding: 12px 14px; color: var(--txt); font-family: inherit; font-size: 15px; outline: none; transition: border-color 0.2s; }
 .field input:focus { border-color: var(--accent); }
 .field input::placeholder { color: var(--dim2); }
+.locate-btn { background: transparent; border: 1px solid var(--brd); border-radius: 999px; color: var(--dim); font-family: inherit; font-size: 11px; font-weight: 600; padding: 6px 10px; cursor: pointer; transition: border-color 0.2s, color 0.2s, background 0.2s; white-space: nowrap; }
+.locate-btn:hover { border-color: var(--accent); color: var(--txt); background: rgba(129,140,248,0.08); }
+.locate-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 .row { display: flex; gap: 12px; }
 .row .field { flex: 1; }
 .btn-main { width: 100%; background: var(--accent); color: #fff; border: none; border-radius: 10px; padding: 14px; font-size: 15px; font-weight: 600; cursor: pointer; font-family: inherit; margin-top: 8px; transition: opacity 0.2s; }
@@ -146,7 +151,10 @@ a { color: var(--accent); text-decoration: none; }
   </div>
   <form id="route-form" autocomplete="off">
     <div class="field">
-      <label>Origem</label>
+      <div class="field-head">
+        <label for="origem">Origem</label>
+        <button type="button" class="locate-btn" id="locate-btn">Usar minha localização</button>
+      </div>
       <input type="text" id="origem" placeholder="Ex: Rio de Janeiro" required>
     </div>
     <div class="field">
@@ -250,6 +258,18 @@ function reverseGeo(lat, lon) {
     .then(function(r) { if (!r.ok) return null; return r.json(); })
     .then(function(d) { if (!d || !d.address) return null; return d.address.city || d.address.town || d.address.municipality || d.address.village || null; })
     .catch(function() { return null; });
+}
+
+function reverseGeoInput(lat, lon) {
+  return fetch('https://nominatim.openstreetmap.org/reverse?lat=' + lat + '&lon=' + lon + '&format=json&zoom=10', { headers: { 'User-Agent': 'trajeto/1.0' } })
+    .then(function(r) { if (!r.ok) throw new Error('Nao foi possivel identificar sua localizacao'); return r.json(); })
+    .then(function(d) {
+      if (!d || !d.address) throw new Error('Nao foi possivel identificar sua localizacao');
+      var cidade = d.address.city || d.address.town || d.address.municipality || d.address.village || d.address.county || d.address.state;
+      var pais = d.address.country;
+      if (cidade && pais && cidade !== pais) return cidade + ', ' + pais;
+      return cidade || pais || d.display_name || null;
+    });
 }
 
 function estimateTimes(pts, geo, depH, spd) {
@@ -360,7 +380,7 @@ function brandFooterHtml() {
           '<span class="brand-icon" aria-hidden="true">' +
             '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10 14 21 3"/><path d="M21 3h-7"/><path d="M21 3v7"/><path d="M14 10v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V12a2 2 0 0 1 2-2h8"/></svg>' +
           '</span>' +
-          '<span>amadafoca.github.io</span>' +
+          '<span>trajetoapp.com.br</span>' +
         '</a>' +
         '<a class="brand-chip" href="https://www.instagram.com/diogomoreno/" target="_blank" rel="noreferrer">' +
           '<span class="brand-icon" aria-hidden="true">' +
@@ -522,10 +542,56 @@ function showErr(m) {
   e.style.display = 'block';
 }
 
+function locateUser() {
+  var btn = document.getElementById('locate-btn');
+  var origem = document.getElementById('origem');
+  document.getElementById('error-msg').style.display = 'none';
+
+  if (!navigator.geolocation) {
+    showErr('Seu navegador nao suporta localizacao atual');
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = 'Localizando...';
+
+  navigator.geolocation.getCurrentPosition(function(pos) {
+    reverseGeoInput(pos.coords.latitude, pos.coords.longitude)
+      .then(function(nome) {
+        if (!nome) throw new Error('Nao foi possivel converter sua localizacao em origem');
+        origem.value = nome;
+        origem.focus();
+        btn.textContent = 'Localizacao detectada';
+        setTimeout(function() {
+          btn.textContent = 'Usar minha localização';
+          btn.disabled = false;
+        }, 1800);
+      })
+      .catch(function(err) {
+        showErr(err.message || 'Nao foi possivel usar sua localizacao atual');
+        btn.disabled = false;
+        btn.textContent = 'Usar minha localização';
+      });
+  }, function(err) {
+    var msg = 'Nao foi possivel usar sua localizacao atual';
+    if (err && err.code === 1) msg = 'Permissao de localizacao negada';
+    else if (err && err.code === 2) msg = 'Localizacao indisponivel no momento';
+    else if (err && err.code === 3) msg = 'Tempo esgotado ao buscar sua localizacao';
+    showErr(msg);
+    btn.disabled = false;
+    btn.textContent = 'Usar minha localização';
+  }, {
+    enableHighAccuracy: true,
+    timeout: 10000,
+    maximumAge: 300000
+  });
+}
+
 var tmr = new Date();
 tmr.setDate(tmr.getDate() + 1);
 document.getElementById('data').value = tmr.toISOString().split('T')[0];
 var shouldAutorun = fillFormFromUrl();
+document.getElementById('locate-btn').addEventListener('click', locateUser);
 
 document.getElementById('route-form').addEventListener('submit', function(e) {
   e.preventDefault();
