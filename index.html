@@ -5,6 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Trajeto</title>
 <meta name="description" content="Previsão de chuva hora a hora para suas viagens">
+<meta name="theme-color" content="#09111d">
+<meta name="apple-mobile-web-app-title" content="Trajeto">
+<link rel="icon" type="image/png" href="./assets/trajeto-favicon-512.png">
+<link rel="apple-touch-icon" href="./assets/trajeto-favicon-512.png">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
@@ -22,10 +26,10 @@
   --yellow: #fbbf24;
   --orange: #f97316;
   --red: #ef4444;
-  --accent: #7388ff;
-  --accent-strong: #5572ff;
-  --accent-soft: rgba(115,136,255,0.18);
-  --accent-2: #66c2ff;
+  --accent: #6d93ff;
+  --accent-strong: #4d7dff;
+  --accent-soft: rgba(109,147,255,0.16);
+  --accent-2: #7cd8ff;
   --blue: #7cc6ff;
 }
 * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -39,120 +43,189 @@ body {
 }
 a { color: var(--accent); text-decoration: none; }
 
-/* Brand-first mobile hierarchy: lock the symbol, wordmark and promise before the route form. */
-.top-shell { max-width: 580px; margin: 0 auto; padding: 18px 16px 0; }
-.brand-header { padding: 6px 2px 0; }
+/* Brand-first header now uses the shipped Trajeto assets so the page matches the saved identity. */
+.top-shell { max-width: 620px; margin: 0 auto; padding: 20px 16px 0; }
+.brand-header { padding: 8px 2px 0; }
 .brand-lockup { display: flex; align-items: center; gap: 14px; }
-.brand-symbol {
-  width: 56px;
-  height: 56px;
-  border-radius: 19px;
+.brand-tile {
+  position: relative;
+  width: 64px;
+  height: 64px;
+  border-radius: 22px;
+  flex-shrink: 0;
   display: grid;
   place-items: center;
-  flex-shrink: 0;
-  background: linear-gradient(180deg, rgba(115,136,255,0.18), rgba(102,194,255,0.10));
-  border: 1px solid rgba(145,160,255,0.20);
-  box-shadow: inset 0 1px 0 rgba(255,255,255,0.08), 0 18px 40px rgba(3,7,16,0.45);
+  background: linear-gradient(180deg, rgba(18,29,49,0.92), rgba(10,17,29,0.98));
+  border: 1px solid rgba(132,150,188,0.18);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.05), 0 20px 36px rgba(1,6,13,0.34);
 }
-.brand-symbol svg { width: 34px; height: 34px; display: block; }
-.brand-copy { min-width: 0; }
-.brand-name {
-  font-size: clamp(34px, 8.5vw, 46px);
-  line-height: 0.92;
-  letter-spacing: -0.065em;
-  font-weight: 700;
-  color: #f5f7ff;
+.brand-tile::before {
+  content: '';
+  position: absolute;
+  inset: 1px;
+  border-radius: 21px;
+  background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0));
+}
+.brand-mark {
+  position: relative;
+  z-index: 1;
+  width: 78%;
+  height: 78%;
+  object-fit: contain;
+  filter: drop-shadow(0 10px 18px rgba(67,131,255,0.18));
+}
+.brand-copy { min-width: 0; display: flex; flex-direction: column; }
+.brand-wordmark {
+  width: min(242px, 58vw);
+  height: auto;
+  display: block;
 }
 .brand-tagline {
   color: var(--dim);
   font-size: 13px;
   line-height: 1.45;
-  margin-top: 6px;
+  margin-top: 8px;
+  padding-left: 2px;
   letter-spacing: 0.01em;
 }
 
 .hero {
   position: relative;
-  min-height: 152px;
-  margin-top: 18px;
-  padding: 18px;
-  display: flex;
-  align-items: flex-end;
+  margin-top: 20px;
+  padding: 16px;
   overflow: hidden;
-  border-radius: 28px;
-  background: url('./assets/banner_mobile.png') center center / cover no-repeat;
-  border: 1px solid rgba(145,160,255,0.14);
-  box-shadow: 0 26px 64px rgba(0,0,0,0.34);
+  border-radius: 30px;
+  background: linear-gradient(180deg, rgba(15,24,39,0.90), rgba(10,17,29,0.97));
+  border: 1px solid rgba(125,144,181,0.12);
+  box-shadow: 0 26px 64px rgba(0,0,0,0.32), inset 0 1px 0 rgba(255,255,255,0.04);
 }
 .hero::before {
   content: '';
   position: absolute;
-  inset: 0;
-  background:
-    linear-gradient(180deg, rgba(5,9,17,0.16) 0%, rgba(8,13,22,0.50) 45%, rgba(8,13,22,0.88) 100%),
-    linear-gradient(115deg, rgba(115,136,255,0.18) 0%, rgba(9,17,29,0.0) 38%, rgba(102,194,255,0.18) 100%);
+  inset: -22% 34% auto -16%;
+  height: 180px;
+  background: radial-gradient(circle, rgba(124,216,255,0.14) 0%, rgba(124,216,255,0) 72%);
+  pointer-events: none;
 }
 .hero::after {
   content: '';
   position: absolute;
-  width: 230px;
-  height: 230px;
-  right: -78px;
-  bottom: -136px;
-  background: radial-gradient(circle, rgba(115,136,255,0.34) 0%, rgba(115,136,255,0.0) 72%);
-  filter: blur(8px);
+  inset: 0;
+  background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0));
+  pointer-events: none;
 }
-.hero-inner { position: relative; z-index: 1; width: 100%; }
-.hero-strip { display: flex; gap: 8px; flex-wrap: wrap; }
-.hero-pill {
+.hero-frame { position: relative; z-index: 1; }
+.hero-meta { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
+.hero-chip {
   display: inline-flex;
   align-items: center;
   gap: 8px;
   padding: 8px 12px;
   border-radius: 999px;
-  background: rgba(10,16,28,0.54);
-  border: 1px solid rgba(255,255,255,0.10);
-  color: #d8def2;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08);
+  color: #d8e2f6;
   font-size: 11px;
   font-weight: 600;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
 }
-.hero-dot {
-  width: 7px;
-  height: 7px;
+.hero-chip--soft { color: #b7c3db; background: rgba(10,16,28,0.40); }
+.hero-chip-dot {
+  width: 6px;
+  height: 6px;
   border-radius: 50%;
   background: linear-gradient(135deg, var(--accent), var(--accent-2));
-  box-shadow: 0 0 16px rgba(102,194,255,0.6);
 }
+.hero-media {
+  position: relative;
+  min-height: 220px;
+  border-radius: 24px;
+  overflow: hidden;
+  background: var(--card3);
+  border: 1px solid rgba(126,144,181,0.14);
+}
+.hero-media::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background:
+    linear-gradient(180deg, rgba(5,8,14,0.78) 0%, rgba(5,8,14,0.18) 24%, rgba(5,8,14,0.28) 62%, rgba(5,8,14,0.72) 100%),
+    linear-gradient(90deg, rgba(5,8,14,0.62) 0%, rgba(5,8,14,0.18) 32%, rgba(5,8,14,0) 54%, rgba(5,8,14,0.26) 100%);
+}
+.hero-media::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  border-radius: inherit;
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,0.04);
+}
+.hero-media picture, .hero-media img {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+.hero-media img {
+  object-fit: cover;
+  object-position: center 62%;
+  filter: saturate(0.92) brightness(0.88) contrast(1.04);
+}
+.hero-badge {
+  position: absolute;
+  z-index: 3;
+  left: 14px;
+  bottom: 14px;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 16px;
+  background: rgba(7,12,21,0.48);
+  border: 1px solid rgba(255,255,255,0.08);
+  color: #f2f6ff;
+  font-size: 12px;
+  line-height: 1.35;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+.hero-badge-mark {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  box-shadow: 0 0 16px rgba(124,216,255,0.40);
+}
+.hero-badge strong { display: block; font-size: 12px; font-weight: 600; color: #f7f9ff; }
+.hero-badge span { display: block; color: #aab5c9; }
 
-.form-wrap { max-width: 580px; margin: 0 auto; padding: 18px 16px 30px; }
-/* Functional copy bridges the brand promise into the route-planning action. */
-.intro-block { padding: 2px 2px 22px; }
+.form-wrap { max-width: 620px; margin: 0 auto; padding: 20px 16px 30px; }
+/* Functional copy stays intact, but spacing and rhythm now follow the new brand system. */
+.intro-block { padding: 4px 2px 22px; }
 .intro-title {
-  font-size: clamp(31px, 8vw, 44px);
+  font-size: clamp(31px, 8vw, 45px);
   line-height: 1.03;
-  letter-spacing: -0.055em;
+  letter-spacing: -0.06em;
   font-weight: 700;
-  max-width: 11ch;
+  max-width: 12ch;
   color: #f5f7ff;
 }
 .intro-subtitle {
   color: var(--dim);
   font-size: 14px;
-  line-height: 1.65;
-  max-width: 36ch;
+  line-height: 1.68;
+  max-width: 37ch;
   margin-top: 12px;
 }
 
 .form-panel {
-  background: linear-gradient(180deg, rgba(18,29,49,0.88), rgba(13,23,40,0.96));
-  border: 1px solid rgba(129,140,248,0.12);
-  border-radius: 24px;
+  background: linear-gradient(180deg, rgba(17,28,47,0.90), rgba(11,18,31,0.97));
+  border: 1px solid rgba(125,144,181,0.14);
+  border-radius: 28px;
   padding: 18px;
-  box-shadow: 0 28px 72px rgba(0,0,0,0.30), inset 0 1px 0 rgba(255,255,255,0.04);
+  box-shadow: 0 22px 54px rgba(0,0,0,0.24), inset 0 1px 0 rgba(255,255,255,0.04);
 }
 .field { margin-bottom: 14px; }
 .field label { display: block; font-size: 11px; font-weight: 700; color: var(--dim); text-transform: uppercase; letter-spacing: 0.12em; margin-bottom: 6px; }
@@ -160,8 +233,8 @@ a { color: var(--accent); text-decoration: none; }
 .field-head label { margin-bottom: 0; }
 .field input {
   width: 100%;
-  background: rgba(9,17,29,0.82);
-  border: 1px solid var(--brd);
+  background: rgba(7,14,24,0.82);
+  border: 1px solid rgba(126,144,181,0.20);
   border-radius: 14px;
   padding: 13px 14px;
   color: var(--txt);
@@ -173,12 +246,12 @@ a { color: var(--accent); text-decoration: none; }
 .field input:focus {
   border-color: var(--accent);
   box-shadow: 0 0 0 4px var(--accent-soft);
-  background: rgba(10,18,30,0.96);
+  background: rgba(9,16,28,0.96);
 }
 .field input::placeholder { color: var(--dim2); }
 .locate-btn {
-  background: rgba(255,255,255,0.02);
-  border: 1px solid rgba(129,140,248,0.18);
+  background: rgba(109,147,255,0.08);
+  border: 1px solid rgba(109,147,255,0.18);
   border-radius: 999px;
   color: #cbd4ea;
   font-family: inherit;
@@ -191,7 +264,7 @@ a { color: var(--accent); text-decoration: none; }
   transition: border-color 0.2s, color 0.2s, background 0.2s;
   white-space: nowrap;
 }
-.locate-btn:hover { border-color: var(--accent); color: var(--txt); background: rgba(129,140,248,0.08); }
+.locate-btn:hover { border-color: var(--accent); color: var(--txt); background: rgba(109,147,255,0.14); }
 .locate-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 .row { display: flex; gap: 12px; }
 .row .field { flex: 1; }
@@ -282,54 +355,63 @@ a { color: var(--accent); text-decoration: none; }
 @keyframes spin { to { transform: rotate(360deg); } }
 @media (min-width: 700px) {
   .top-shell, .form-wrap { max-width: 860px; }
-  .hero { min-height: 214px; padding: 22px 24px; background-image: url('./assets/banner_desktop.png'); }
+  .brand-wordmark { width: 280px; }
+  .hero { padding: 20px; }
+  .hero-media { min-height: 308px; }
+  .hero-media img { object-position: center 52%; }
   .intro-title { max-width: 13ch; }
   .form-panel { padding: 22px; }
 }
 @media (max-width: 520px) {
   .top-shell { padding: 16px 14px 0; }
-  .brand-lockup { align-items: flex-start; gap: 12px; }
-  .brand-symbol { width: 52px; height: 52px; border-radius: 17px; }
+  .brand-lockup { align-items: center; gap: 12px; }
+  .brand-tile { width: 56px; height: 56px; border-radius: 19px; }
+  .brand-wordmark { width: min(212px, 56vw); }
   .brand-tagline { max-width: 18ch; }
-  .hero { min-height: 142px; margin-top: 16px; padding: 14px; border-radius: 24px; }
-  .hero-pill { font-size: 10px; padding: 8px 11px; }
+  .hero { margin-top: 16px; padding: 14px; border-radius: 26px; }
+  .hero-chip { font-size: 10px; padding: 8px 11px; }
+  .hero-media { min-height: 190px; border-radius: 22px; }
+  .hero-badge { left: 12px; right: 12px; bottom: 12px; }
   .form-wrap { padding: 18px 14px 28px; }
   .intro-title { font-size: clamp(29px, 8.5vw, 36px); }
-  .form-panel { padding: 16px; border-radius: 22px; }
+  .form-panel { padding: 16px; border-radius: 24px; }
 }
 </style>
 </head>
 <body>
 
 <div class="top-shell">
-  <!-- Brand-first header: a simple route-inspired symbol, strong wordmark and compact promise. -->
+  <!-- Use the shipped padded icon and wordmark so the landing page matches the saved Trajeto identity. -->
   <header class="brand-header" aria-label="Marca Trajeto">
     <div class="brand-lockup">
-      <div class="brand-symbol" aria-hidden="true">
-        <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <defs>
-            <linearGradient id="trajeto-mark-gradient" x1="14" y1="14" x2="49" y2="52" gradientUnits="userSpaceOnUse">
-              <stop stop-color="#8C96FF"/>
-              <stop offset="1" stop-color="#66C2FF"/>
-            </linearGradient>
-          </defs>
-          <path d="M16 16H48" stroke="url(#trajeto-mark-gradient)" stroke-width="6" stroke-linecap="round"/>
-          <path d="M32 16V28C32 39 26 48 16 52" stroke="url(#trajeto-mark-gradient)" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
-          <circle cx="16" cy="52" r="4" fill="url(#trajeto-mark-gradient)"/>
-        </svg>
+      <div class="brand-tile" aria-hidden="true">
+        <img class="brand-mark" src="./assets/trajeto-icon-padded.png" alt="" width="205" height="205">
       </div>
       <div class="brand-copy">
-        <div class="brand-name">Trajeto</div>
+        <img class="brand-wordmark" src="./assets/trajeto-wordmark-padded.png" alt="Trajeto" width="469" height="131">
         <p class="brand-tagline">O clima do seu caminho</p>
       </div>
     </div>
   </header>
 
-  <section class="hero" aria-label="Atmosfera da rota">
-    <div class="hero-inner">
-      <div class="hero-strip">
-        <div class="hero-pill"><span class="hero-dot"></span>Trecho a trecho</div>
-        <div class="hero-pill">Saída mais consciente</div>
+  <section class="hero" aria-label="Destaque visual do produto">
+    <div class="hero-frame">
+      <div class="hero-meta">
+        <div class="hero-chip"><span class="hero-chip-dot"></span>Trecho a trecho</div>
+        <div class="hero-chip hero-chip--soft">Leitura antes da saída</div>
+      </div>
+      <div class="hero-media">
+        <picture>
+          <source media="(min-width: 700px)" srcset="./assets/banner_desktop.png">
+          <img src="./assets/banner_mobile.png" alt="Visual do Trajeto com rota, chuva por trecho e leitura de saída">
+        </picture>
+        <div class="hero-badge">
+          <span class="hero-badge-mark" aria-hidden="true"></span>
+          <div>
+            <strong>Clima e rota em uma só leitura</strong>
+            <span>Decida melhor antes de acelerar</span>
+          </div>
+        </div>
       </div>
     </div>
   </section>
