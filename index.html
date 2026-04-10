@@ -909,7 +909,7 @@ if (shouldAutorun) {
 
     function fetchSuggestions(q) {
       fetch(
-        'https://nominatim.openstreetmap.org/search?q=' + encodeURIComponent(q) + '&format=json&limit=5&addressdetails=1&viewbox=-74,-34,-35,6&bounded=0&countrycodes=br,uy,ar,py,bo,cl,co,pe,ec,ve,gf,sr,gy',
+        'https://nominatim.openstreetmap.org/search?q=' + encodeURIComponent(q) + '&format=json&limit=5&addressdetails=1&featuretype=city&viewbox=-74,-34,-35,6&bounded=0&countrycodes=br,uy,ar,py,bo,cl,co,pe,ec,ve,gf,sr,gy',
         { headers: { 'User-Agent': 'TrajetoApp/1.0', 'Accept-Language': 'pt-BR' } }
       )
         .then(function (r) { return r.json(); })
