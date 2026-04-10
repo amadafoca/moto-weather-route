@@ -380,7 +380,7 @@ a { color: var(--accent); text-decoration: none; }
       </div>
       <button type="submit" class="btn-main" id="submit-btn">Consultar previsão</button>
       <div class="error-msg" id="error-msg"></div>
-      <p class="speed-note">Dados: Open-Meteo &middot; Rota: OSRM/OpenStreetMap &middot; Gratuito, sem cadastro</p>
+      <p class="speed-note">Dados: Open-Meteo &middot; Rota: OpenStreetMap &middot; Gratuito, sem cadastro</p>
     </form>
   </div>
   <div class="site-brand">
@@ -402,7 +402,7 @@ a { color: var(--accent); text-decoration: none; }
       </a>
     </div>
   </div>
-  <span id="version" style="font-size:0.65rem;opacity:0.35;text-align:center;letter-spacing:0.05em;display:block;margin-top:1.5rem;">build a673817</span>
+  <span id="version" style="font-size:0.65rem;opacity:0.35;text-align:center;letter-spacing:0.05em;display:block;margin-top:1.5rem;">build aaa27f1</span>
 </div>
 
 <div class="loading-overlay" id="loading" style="display:none">
@@ -456,7 +456,7 @@ async function fetchRoute(origin, destination) {
     if (!ghRes.ok) { var ghBody = await ghRes.text().catch(function() { return ''; }); throw new Error('HTTP ' + ghRes.status + (ghBody.indexOf('message') > -1 ? ' — ' + (JSON.parse(ghBody).message || '').slice(0, 80) : '')); }
     var ghData = await ghRes.json();
     if (!ghData.paths || !ghData.paths.length) throw new Error('Sem rota');
-    return ghData.paths[0].points;
+    return { geometry: ghData.paths[0].points, routeEngine: 'GraphHopper' };
   } catch (e) {
     ghErr = e.message || 'erro desconhecido';
     try {
@@ -464,7 +464,7 @@ async function fetchRoute(origin, destination) {
       if (!osrmRes.ok) throw new Error('HTTP ' + osrmRes.status);
       var osrmData = await osrmRes.json();
       if (!osrmData.routes || !osrmData.routes.length) throw new Error('Sem rota');
-      return osrmData.routes[0].geometry;
+      return { geometry: osrmData.routes[0].geometry, routeEngine: 'OSRM' };
     } catch (e2) {
       osrmErr = e2.message || 'erro desconhecido';
       throw new Error('Não foi possível calcular a rota. Tente novamente em instantes. (GraphHopper: ' + ghErr + ' · OSRM: ' + osrmErr + ')');
@@ -474,10 +474,10 @@ async function fetchRoute(origin, destination) {
 
 function getRoute(o, d) {
   return fetchRoute({ lat: o.lat, lng: o.lon }, { lat: d.lat, lng: d.lon })
-    .then(function(geometry) {
-      var c = geometry.coordinates, dist = 0;
+    .then(function(result) {
+      var c = result.geometry.coordinates, dist = 0;
       for (var i = 1; i < c.length; i++) { dist += haversine(c[i-1][1], c[i-1][0], c[i][1], c[i][0]); }
-      return { geometry: geometry, dist: dist };
+      return { geometry: result.geometry, dist: dist, routeEngine: result.routeEngine };
     });
 }
 
@@ -626,10 +626,10 @@ function brandFooterHtml() {
         '</a>' +
       '</div>' +
     '</div>' +
-    '<span id="version" style="font-size:0.65rem;opacity:0.35;text-align:center;letter-spacing:0.05em;display:block;margin-top:1.5rem;">build a673817</span>';
+    '<span id="version" style="font-size:0.65rem;opacity:0.35;text-align:center;letter-spacing:0.05em;display:block;margin-top:1.5rem;">build aaa27f1</span>';
 }
 
-function buildResults(dados, routeGeo, oN, dN, date, hora, km) {
+function buildResults(dados, routeGeo, oN, dN, date, hora, km, routeEngine) {
   var mx = Math.max.apply(null, dados.map(function(d) { return d.mm; }));
   var mxC = Math.max.apply(null, dados.reduce(function(a, d) { return a.concat(d.ctx.map(function(c) { return c.mm; })); }, [0.1]));
   var secos = dados.filter(function(d) { return d.mm < 0.1; }).length;
@@ -703,7 +703,7 @@ function buildResults(dados, routeGeo, oN, dN, date, hora, km) {
   html += '<div class="notes"><h3>\ud83c\udfcd\ufe0f Dicas pro piloto</h3>';
   dicas.forEach(function(d) { html += '<p>' + d + '</p>'; });
   html += '</div>';
-  html += '<div class="footer">Dados ao vivo: Open-Meteo (GFS/ICON) + OpenStreetMap/OSRM<br>';
+  html += '<div class="footer">Dados ao vivo: Open-Meteo (GFS/ICON) + ' + routeEngine + '/OpenStreetMap<br>';
   html += 'Consultado: ' + new Date().toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' });
   html += '<br><button class="btn-sm" onclick="location.reload()">\ud83d\udd04 Atualizar</button>';
   html += '<button class="share-btn" id="share-btn">\ud83d\udd17 Copiar link</button>';
@@ -875,7 +875,7 @@ document.getElementById('route-form').addEventListener('submit', function(e) {
         }).then(function(dados) {
           hideLoad();
           document.getElementById('form-screen').style.display = 'none';
-          buildResults(dados, route.geometry, orig.name, dest.name, dt, hr, route.dist);
+          buildResults(dados, route.geometry, orig.name, dest.name, dt, hr, route.dist, route.routeEngine);
         });
       });
     })
