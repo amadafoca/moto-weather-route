@@ -922,7 +922,7 @@ if (shouldAutorun) {
             var city = p.name || '';
             if (!city) return;
             var stateName = p.state || '';
-            var isBrazil = (p.country_code || '').toUpperCase() === 'BR';
+            var isBrazil = (p.countrycode || '').toUpperCase() === 'BR';
             var stateSub = isBrazil ? (STATE_SIGLA[stateName] || stateName) : stateName;
             var key = city + '|' + stateSub;
             if (seen[key]) return;
@@ -931,7 +931,7 @@ if (shouldAutorun) {
           });
           renderResults(items.slice(0, 5));
         })
-        .catch(function () { hideList(); });
+        .catch(function (err) { console.log('AC error:', err); hideList(); });
     }
 
     inputEl.addEventListener('input', function () {
