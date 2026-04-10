@@ -1,0 +1,1022 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Trajeto</title>
+<meta name="description" content="Previsão de chuva hora a hora para suas viagens">
+<meta name="theme-color" content="#09111d">
+<meta name="apple-mobile-web-app-title" content="Trajeto">
+<!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-00HNT6RM7D"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-00HNT6RM7D');
+</script>
+<link rel="icon" type="image/png" href="./assets/v0/trajeto-favicon-512.png">
+<link rel="apple-touch-icon" href="./assets/v0/trajeto-favicon-512.png">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #09111d;
+  --card: #121d31;
+  --card2: #17243a;
+  --card3: #0d1728;
+  --brd: #24324a;
+  --txt: #eef2ff;
+  --dim: #99a6be;
+  --dim2: #64748b;
+  --green: #34d399;
+  --yellow: #fbbf24;
+  --orange: #f97316;
+  --red: #ef4444;
+  --accent: #6d93ff;
+  --accent-strong: #4d7dff;
+  --accent-soft: rgba(109,147,255,0.16);
+  --accent-2: #7cd8ff;
+  --blue: #7cc6ff;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: 'DM Sans', system-ui, sans-serif;
+  background:
+    radial-gradient(circle at top, rgba(102,194,255,0.12), transparent 28%),
+    linear-gradient(180deg, #0c1524 0%, #09111d 46%, #08101a 100%);
+  color: var(--txt);
+  min-height: 100vh;
+}
+a { color: var(--accent); text-decoration: none; }
+
+/* Brand-first header now uses the shipped Trajeto assets so the page matches the saved identity. */
+.top-shell {
+  max-width: 620px;
+  margin: 0 auto;
+  padding: 18px 16px 0;
+  position: relative;
+}
+.top-shell::before {
+  content: '';
+  position: absolute;
+  inset: -40px 18% auto 8%;
+  height: 120px;
+  background: radial-gradient(circle, rgba(124,198,255,0.10) 0%, rgba(124,198,255,0) 72%);
+  pointer-events: none;
+}
+.brand-header { position: relative; z-index: 1; padding: 2px 2px 0; }
+.brand-lockup { display: flex; align-items: center; gap: 9px; }
+.brand-tile {
+  position: relative;
+  width: 48px;
+  height: 48px;
+  border-radius: 16px;
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  background: linear-gradient(180deg, rgba(18,29,49,0.92), rgba(10,17,29,0.98));
+  border: 1px solid rgba(132,150,188,0.18);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.05), 0 12px 24px rgba(1,6,13,0.24);
+}
+.brand-tile::before {
+  content: '';
+  position: absolute;
+  inset: 1px;
+  border-radius: 15px;
+  background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0));
+}
+.brand-mark {
+  position: relative;
+  z-index: 1;
+  width: 82%;
+  height: 82%;
+  object-fit: contain;
+  transform: translateY(1px);
+  filter: drop-shadow(0 8px 16px rgba(67,131,255,0.16));
+}
+.brand-copy {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 2px;
+  padding-top: 0;
+}
+.brand-wordmark {
+  width: min(194px, 44vw);
+  height: auto;
+  display: block;
+  transform: translateY(1px);
+}
+.brand-tagline {
+  color: var(--dim);
+  font-size: 11px;
+  line-height: 1.2;
+  margin-top: 0;
+  padding-left: 1px;
+  letter-spacing: 0.015em;
+  max-width: 18ch;
+}
+
+.form-wrap { max-width: 620px; margin: 0 auto; padding: 8px 16px 28px; }
+.intro-block { padding: 4px 2px 10px; }
+.intro-title {
+  font-size: clamp(15px, 2vw, 18px);
+  line-height: 1.3;
+  letter-spacing: -0.02em;
+  font-weight: 500;
+  max-width: 30ch;
+  color: #d7e1f6;
+}
+
+.form-panel {
+  background: linear-gradient(180deg, rgba(17,28,47,0.90), rgba(11,18,31,0.97));
+  border: 1px solid rgba(125,144,181,0.14);
+  border-radius: 24px;
+  padding: 16px;
+  box-shadow: 0 22px 54px rgba(0,0,0,0.24), inset 0 1px 0 rgba(255,255,255,0.04);
+}
+.field { margin-bottom: 14px; }
+.field label { display: block; font-size: 11px; font-weight: 700; color: var(--dim); text-transform: uppercase; letter-spacing: 0.12em; margin-bottom: 6px; }
+.field-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 6px; }
+.field-head label { margin-bottom: 0; }
+.field input {
+  width: 100%;
+  background: rgba(7,14,24,0.82);
+  border: 1px solid rgba(126,144,181,0.20);
+  border-radius: 14px;
+  padding: 13px 14px;
+  color: var(--txt);
+  font-family: inherit;
+  font-size: 15px;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+}
+.field input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 4px var(--accent-soft);
+  background: rgba(9,16,28,0.96);
+}
+.field input::placeholder { color: var(--dim2); }
+.locate-btn {
+  background: rgba(109,147,255,0.08);
+  border: 1px solid rgba(109,147,255,0.18);
+  border-radius: 999px;
+  color: #cbd4ea;
+  font-family: inherit;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 7px 11px;
+  cursor: pointer;
+  transition: border-color 0.2s, color 0.2s, background 0.2s;
+  white-space: nowrap;
+}
+.locate-btn:hover { border-color: var(--accent); color: var(--txt); background: rgba(109,147,255,0.14); }
+.locate-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.row { display: flex; gap: 12px; }
+.row .field { flex: 1; }
+.btn-main {
+  width: 100%;
+  background: linear-gradient(135deg, var(--accent) 0%, var(--accent-strong) 100%);
+  color: #fff;
+  border: none;
+  border-radius: 16px;
+  padding: 15px;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+  margin-top: 8px;
+  box-shadow: 0 18px 38px rgba(85,114,255,0.34);
+  transition: transform 0.2s, opacity 0.2s, box-shadow 0.2s;
+}
+.btn-main:hover { opacity: 0.96; transform: translateY(-1px); box-shadow: 0 22px 42px rgba(85,114,255,0.42); }
+.btn-main:disabled { opacity: 0.5; cursor: not-allowed; }
+.error-msg { background: rgba(239,68,68,0.10); border: 1px solid rgba(239,68,68,0.24); color: #fda4af; border-radius: 12px; padding: 10px 14px; font-size: 13px; margin-top: 12px; display: none; }
+.speed-note { font-size: 11px; color: var(--dim); margin-top: 12px; text-align: left; line-height: 1.7; }
+
+.results { display: none; }
+.header { text-align: center; padding: 20px 16px 12px; }
+.badge { display: inline-flex; align-items: center; gap: 8px; background: var(--card); border: 1px solid var(--brd); border-radius: 100px; padding: 7px 16px; font-size: 13px; color: var(--dim); margin-bottom: 10px; }
+.badge span { color: var(--accent); font-weight: 600; }
+.header h2 { font-size: 22px; font-weight: 700; letter-spacing: -0.5px; margin-bottom: 4px; }
+.header .sub { color: var(--dim); font-size: 12px; }
+.back-btn { display: inline-flex; align-items: center; gap: 6px; color: var(--accent); font-size: 13px; cursor: pointer; margin-bottom: 12px; background: none; border: none; font-family: inherit; }
+.back-btn:hover { text-decoration: underline; }
+
+#map { width: 100%; height: 45vh; min-height: 280px; border-top: 1px solid var(--brd); border-bottom: 1px solid var(--brd); }
+.leaflet-popup-content-wrapper { background: var(--card) !important; color: var(--txt) !important; border: 1px solid var(--brd) !important; border-radius: 10px !important; box-shadow: 0 8px 32px rgba(0,0,0,0.5) !important; }
+.leaflet-popup-tip { background: var(--card) !important; }
+.leaflet-popup-content { font-family: 'DM Sans', sans-serif !important; font-size: 13px !important; line-height: 1.5 !important; margin: 10px 14px !important; }
+.popup-name { font-weight: 700; font-size: 14px; margin-bottom: 4px; }
+.popup-mm { font-family: 'JetBrains Mono', monospace; font-size: 18px; font-weight: 700; }
+.popup-tag { display: inline-block; font-size: 10px; font-weight: 700; text-transform: uppercase; padding: 2px 8px; border-radius: 4px; margin-left: 6px; }
+.popup-detail { color: var(--dim); font-size: 11px; margin-top: 4px; }
+.map-legend { display: flex; gap: 12px; justify-content: center; padding: 10px 16px; background: var(--card); border-bottom: 1px solid var(--brd); flex-wrap: wrap; }
+.legend-item { display: flex; align-items: center; gap: 5px; font-size: 11px; color: var(--dim); }
+.legend-dot { width: 10px; height: 10px; border-radius: 50%; }
+
+.content { max-width: 520px; margin: 0 auto; padding: 0 16px; }
+.verdict { border: 1px solid; border-radius: 14px; padding: 16px 18px; margin: 16px 0 22px; display: flex; align-items: center; gap: 12px; }
+.sec-title { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; color: var(--dim); margin-bottom: 12px; padding-left: 4px; }
+.timeline { position: relative; padding-left: 26px; }
+.tl-line { position: absolute; left: 5px; top: 8px; bottom: 8px; width: 2px; background: var(--brd); border-radius: 2px; }
+.stop { position: relative; padding-bottom: 12px; }
+.stop:last-child { padding-bottom: 0; }
+.dot { position: absolute; left: -22px; top: 6px; width: 12px; height: 12px; border-radius: 50%; border: 2px solid; cursor: pointer; transition: transform 0.15s; }
+.dot:hover { transform: scale(1.4); }
+.scard { background: var(--card); border: 1px solid var(--brd); border-radius: 10px; padding: 11px 13px; cursor: pointer; transition: border-color 0.2s; }
+.scard:hover { border-color: var(--accent); }
+.s-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+.s-name { font-weight: 600; font-size: 13px; }
+.chip { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--dim); background: var(--card2); padding: 2px 8px; border-radius: 5px; }
+.s-data { display: flex; gap: 16px; align-items: center; }
+.mv { font-family: 'JetBrains Mono', monospace; font-size: 16px; font-weight: 700; }
+.ml { font-size: 10px; color: var(--dim); margin-top: 1px; }
+.tag { display: inline-block; font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; padding: 3px 7px; border-radius: 4px; margin-left: auto; }
+.bars { display: flex; align-items: flex-end; gap: 2px; height: 30px; margin-top: 8px; padding-top: 6px; border-top: 1px solid var(--brd); }
+.bar-col { display: flex; flex-direction: column; align-items: center; flex: 1; gap: 2px; }
+.bar-lbl { font-size: 8px; font-family: 'JetBrains Mono', monospace; color: var(--dim2); }
+.notes { background: rgba(96,165,250,0.06); border: 1px solid rgba(96,165,250,0.15); border-radius: 14px; padding: 16px 18px; margin-top: 20px; }
+.notes h3 { font-size: 13px; font-weight: 600; color: var(--blue); margin-bottom: 8px; }
+.notes p { font-size: 12px; color: var(--dim); line-height: 1.5; padding-left: 16px; position: relative; margin-bottom: 5px; }
+.notes p::before { content: '\2192'; position: absolute; left: 0; color: var(--blue); }
+.footer { text-align: center; padding: 20px 0 24px; font-size: 10px; color: var(--dim2); line-height: 1.6; }
+.site-brand { margin: 26px auto 0; padding: 18px 18px 16px; background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.015)); border: 1px solid var(--brd); border-radius: 20px; text-align: center; box-shadow: 0 18px 40px rgba(0,0,0,0.24); max-width: 420px; }
+.site-brand-mark { width: 84px; height: 84px; object-fit: cover; border-radius: 22px; background: #fff; padding: 6px; box-shadow: 0 10px 26px rgba(0,0,0,0.35); display: block; margin: 0 auto 14px; }
+.site-brand-name { display: inline-block; color: #6ea8ff; font-size: 11px; font-weight: 700; letter-spacing: 3px; text-transform: uppercase; margin-bottom: 8px; }
+.site-brand-copy { color: var(--dim); font-size: 12px; line-height: 1.6; max-width: 280px; margin: 0 auto; }
+.site-brand-links { display: flex; justify-content: center; gap: 12px; flex-wrap: wrap; margin-top: 14px; }
+.brand-chip { display: inline-flex; align-items: center; gap: 8px; padding: 10px 14px; border-radius: 999px; border: 1px solid var(--brd); background: rgba(255,255,255,0.03); color: var(--txt); font-size: 12px; font-weight: 600; }
+.brand-chip:hover { border-color: var(--accent); background: rgba(129,140,248,0.08); }
+.brand-icon { width: 16px; height: 16px; display: inline-flex; align-items: center; justify-content: center; color: var(--blue); flex-shrink: 0; }
+.btn-sm { background: var(--card2); color: var(--dim); border: 1px solid var(--brd); border-radius: 8px; padding: 8px 18px; font-size: 12px; cursor: pointer; font-family: inherit; margin-top: 8px; }
+.btn-sm:hover { border-color: var(--accent); }
+.share-btn { background: #2563eb; color: #fff; border: none; border-radius: 8px; padding: 8px 18px; font-size: 12px; cursor: pointer; font-family: inherit; font-weight: 600; margin-top: 8px; margin-left: 8px; }
+.share-btn:hover { opacity: 0.9; }
+.wpp-btn { background: #25d366; color: #fff; border: none; border-radius: 8px; padding: 8px 18px; font-size: 12px; cursor: pointer; font-family: inherit; font-weight: 600; margin-top: 8px; margin-left: 8px; }
+.wpp-btn:hover { opacity: 0.9; }
+
+.loading-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: var(--bg); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 9999; }
+.spinner { width: 36px; height: 36px; border: 3px solid var(--brd); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+@media (min-width: 700px) {
+  .top-shell, .form-wrap { max-width: 860px; }
+  .top-shell { padding-top: 22px; }
+  .brand-lockup { gap: 10px; }
+  .brand-wordmark { width: 204px; }
+  .brand-tagline { max-width: none; }
+  .form-wrap { padding-top: 14px; }
+  .intro-block { padding-top: 2px; }
+  .intro-title { max-width: 36ch; }
+  .form-panel { padding: 18px; }
+}
+@media (max-width: 520px) {
+  .top-shell { padding: 16px 14px 0; }
+  .top-shell::before { inset: -34px 4% auto 0; height: 96px; }
+  .brand-lockup { align-items: center; gap: 9px; }
+  .brand-tile { width: 44px; height: 44px; border-radius: 15px; }
+  .brand-wordmark { width: min(176px, 50vw); }
+  .brand-tagline { max-width: 16ch; font-size: 10px; }
+  .form-wrap { padding: 8px 14px 26px; }
+  .intro-block { padding: 6px 2px 8px; }
+  .intro-title { font-size: 14px; max-width: 25ch; }
+  .form-panel { padding: 14px; border-radius: 22px; }
+}
+
+/* Autocomplete de cidades */
+.ac-wrap { position: relative; }
+.ac-list {
+  display: none;
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  background: #1a1c24;
+  border: 1px solid rgba(126,144,181,0.22);
+  border-radius: 12px;
+  overflow: hidden;
+  z-index: 200;
+  box-shadow: 0 12px 32px rgba(0,0,0,0.44);
+  list-style: none;
+  padding: 4px 0;
+}
+.ac-list.ac-open { display: block; }
+.ac-list li {
+  padding: 10px 14px;
+  cursor: pointer;
+  font-size: 14px;
+  color: var(--txt);
+  transition: background 0.15s;
+  line-height: 1.3;
+}
+.ac-list li .ac-main { font-weight: 500; display: block; }
+.ac-list li .ac-sub { font-size: 11px; color: var(--dim); display: block; margin-top: 2px; }
+.ac-list li:hover,
+.ac-list li.ac-active { background: rgba(109,147,255,0.14); }
+.ac-list li.ac-active .ac-main { color: var(--accent); }
+</style>
+</head>
+<body>
+
+<div class="top-shell">
+  <!-- Use the shipped padded icon and wordmark so the landing page matches the saved Trajeto identity. -->
+  <header class="brand-header" aria-label="Marca Trajeto">
+    <div class="brand-lockup">
+      <div class="brand-tile" aria-hidden="true">
+        <img class="brand-mark" src="./assets/v0/trajeto-icon-padded.png" alt="" width="205" height="205">
+      </div>
+      <div class="brand-copy">
+        <img class="brand-wordmark" src="./assets/v0/trajeto-wordmark.png" alt="Trajeto" width="355" height="99">
+        <p class="brand-tagline">O clima do seu caminho</p>
+      </div>
+    </div>
+  </header>
+</div>
+
+<div class="form-wrap" id="form-screen">
+  <section class="intro-block" aria-label="Resumo do produto">
+    <p class="intro-title">Veja o clima do seu trajeto antes de sair</p>
+  </section>
+
+  <div class="form-panel">
+    <form id="route-form" autocomplete="off">
+      <div class="field">
+        <div class="field-head">
+          <label for="origem">Origem</label>
+          <button type="button" class="locate-btn" id="locate-btn">Usar minha localização</button>
+        </div>
+        <div class="ac-wrap">
+          <input type="text" id="origem" placeholder="Ex: Rio de Janeiro" required autocomplete="off">
+          <ul class="ac-list"></ul>
+        </div>
+      </div>
+      <div class="field">
+        <label>Destino</label>
+        <div class="ac-wrap">
+          <input type="text" id="destino" placeholder="Ex: Sao Paulo" required autocomplete="off">
+          <ul class="ac-list"></ul>
+        </div>
+      </div>
+      <div class="row">
+        <div class="field">
+          <label>Data</label>
+          <input type="date" id="data" required>
+        </div>
+        <div class="field">
+          <label>Hora de saida</label>
+          <input type="time" id="hora" value="08:00" required>
+        </div>
+      </div>
+      <div class="field">
+        <label>Velocidade media (km/h)</label>
+        <input type="number" id="velocidade" value="90" min="40" max="160" step="10">
+      </div>
+      <button type="submit" class="btn-main" id="submit-btn">Consultar previsão</button>
+      <div class="error-msg" id="error-msg"></div>
+      <p class="speed-note">Dados: Open-Meteo &middot; Rota: OSRM/OpenStreetMap &middot; Gratuito, sem cadastro</p>
+    </form>
+  </div>
+  <div class="site-brand">
+    <img class="site-brand-mark" src="https://github.com/amadafoca.png?size=160" alt="Logo Amada Foca">
+    <div class="site-brand-name">Amada Foca</div>
+    <p class="site-brand-copy">Projeto publicado por Diogo Moreno. Gere a rota, compartilhe no WhatsApp e volte aqui para novas consultas.</p>
+    <div class="site-brand-links">
+      <a class="brand-chip" href="https://trajetoapp.com.br/" target="_blank" rel="noreferrer">
+        <span class="brand-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10 14 21 3"/><path d="M21 3h-7"/><path d="M21 3v7"/><path d="M14 10v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V12a2 2 0 0 1 2-2h8"/></svg>
+        </span>
+        <span>trajetoapp.com.br</span>
+      </a>
+      <a class="brand-chip" href="https://www.instagram.com/diogomoreno/" target="_blank" rel="noreferrer">
+        <span class="brand-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4.25"/><circle cx="17.5" cy="6.5" r="1"/></svg>
+        </span>
+        <span>@diogomoreno</span>
+      </a>
+    </div>
+  </div>
+  <span id="version" style="font-size:0.65rem;opacity:0.35;text-align:center;letter-spacing:0.05em;display:block;margin-top:1.5rem;">build 62427cd</span>
+</div>
+
+<div class="loading-overlay" id="loading" style="display:none">
+  <div class="spinner"></div>
+  <p style="color:#8b90a0;margin-top:16px;font-size:14px" id="load-text">Carregando...</p>
+  <p style="color:#555;font-size:11px;margin-top:4px" id="load-sub"></p>
+</div>
+
+<div class="results" id="results-screen"></div>
+
+<script>
+var DIAS = ['Domingo','Segunda','Terca','Quarta','Quinta','Sexta','Sabado'];
+
+function horaStr(h) {
+  var hh = Math.floor(h);
+  var mm = Math.round((h - hh) * 60);
+  return (hh < 10 ? '0' : '') + hh + ':' + (mm < 10 ? '0' : '') + mm;
+}
+
+function classifica(mm) {
+  if (mm < 0.1) return { tag: 'SECO', cor: '#34d399', bg: 'rgba(52,211,153,0.08)' };
+  if (mm < 1) return { tag: 'GAROA', cor: '#fbbf24', bg: 'rgba(251,191,36,0.08)' };
+  if (mm < 5) return { tag: 'LEVE', cor: '#f97316', bg: 'rgba(249,115,22,0.08)' };
+  if (mm < 15) return { tag: 'MODERADA', cor: '#ef4444', bg: 'rgba(239,68,68,0.08)' };
+  return { tag: 'FORTE', cor: '#dc2626', bg: 'rgba(220,38,38,0.12)' };
+}
+
+function diaSemana(d) { return DIAS[new Date(d + 'T12:00:00').getDay()]; }
+function fmtDate(d) { var p = d.split('-'); return p[2] + '/' + p[1]; }
+function haversine(lat1, lon1, lat2, lon2) {
+  var R = 6371, dLat = (lat2 - lat1) * Math.PI / 180, dLon = (lon2 - lon1) * Math.PI / 180;
+  var a = Math.sin(dLat/2) * Math.sin(dLat/2) + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon/2) * Math.sin(dLon/2);
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
+function geocode(q) {
+  return fetch('https://nominatim.openstreetmap.org/search?q=' + encodeURIComponent(q) + '&format=json&limit=1', { headers: { 'User-Agent': 'trajeto/1.0' } })
+    .then(function(r) { if (!r.ok) throw new Error('Geocoding falhou'); return r.json(); })
+    .then(function(d) { if (!d.length) throw new Error('Local nao encontrado: ' + q); return { lat: parseFloat(d[0].lat), lon: parseFloat(d[0].lon), name: d[0].display_name.split(',')[0] }; });
+}
+
+async function fetchRoute(origin, destination) {
+  var ghUrl = 'https://graphhopper.com/api/1/route?point=' + origin.lat + ',' + origin.lng + '&point=' + destination.lat + ',' + destination.lng + '&profile=car&locale=pt_BR&points_encoded=false&key=3b6f83cd-cc7e-4003-b433-fa5425570bc2';
+  var osrmUrl = 'https://routing.openstreetmap.de/routed-car/route/v1/driving/' + origin.lng + ',' + origin.lat + ';' + destination.lng + ',' + destination.lat + '?overview=full&geometries=geojson';
+  function raceTimeout(promise, ms) {
+    return Promise.race([promise, new Promise(function(_, reject) { setTimeout(function() { reject(new Error('Timeout')); }, ms); })]);
+  }
+  var ghErr, osrmErr;
+  try {
+    var ghRes = await raceTimeout(fetch(ghUrl), 8000);
+    if (!ghRes.ok) { var ghBody = await ghRes.text().catch(function() { return ''; }); throw new Error('HTTP ' + ghRes.status + (ghBody.indexOf('message') > -1 ? ' — ' + (JSON.parse(ghBody).message || '').slice(0, 80) : '')); }
+    var ghData = await ghRes.json();
+    if (!ghData.paths || !ghData.paths.length) throw new Error('Sem rota');
+    return ghData.paths[0].points;
+  } catch (e) {
+    ghErr = e.message || 'erro desconhecido';
+    try {
+      var osrmRes = await fetch(osrmUrl);
+      if (!osrmRes.ok) throw new Error('HTTP ' + osrmRes.status);
+      var osrmData = await osrmRes.json();
+      if (!osrmData.routes || !osrmData.routes.length) throw new Error('Sem rota');
+      return osrmData.routes[0].geometry;
+    } catch (e2) {
+      osrmErr = e2.message || 'erro desconhecido';
+      throw new Error('Não foi possível calcular a rota. Tente novamente em instantes. (GraphHopper: ' + ghErr + ' · OSRM: ' + osrmErr + ')');
+    }
+  }
+}
+
+function getRoute(o, d) {
+  return fetchRoute({ lat: o.lat, lng: o.lon }, { lat: d.lat, lng: d.lon })
+    .then(function(geometry) {
+      var c = geometry.coordinates, dist = 0;
+      for (var i = 1; i < c.length; i++) { dist += haversine(c[i-1][1], c[i-1][0], c[i][1], c[i][0]); }
+      return { geometry: geometry, dist: dist };
+    });
+}
+
+function samplePoints(geo, n, oN, dN) {
+  var c = geo.coordinates, pts = [], tot = c.length, step = Math.max(1, Math.floor(tot / (n + 1)));
+  pts.push({ lat: c[0][1], lon: c[0][0], nome: oN, idx: 0 });
+  for (var i = 1; i <= n; i++) { var ci = Math.min(i * step, tot - 1); pts.push({ lat: c[ci][1], lon: c[ci][0], nome: 'Ponto ' + i, idx: ci }); }
+  pts.push({ lat: c[tot-1][1], lon: c[tot-1][0], nome: dN, idx: tot - 1 });
+  return pts;
+}
+
+function reverseGeo(lat, lon) {
+  return fetch('https://nominatim.openstreetmap.org/reverse?lat=' + lat + '&lon=' + lon + '&format=json&zoom=10', { headers: { 'User-Agent': 'trajeto/1.0' } })
+    .then(function(r) { if (!r.ok) return null; return r.json(); })
+    .then(function(d) { if (!d || !d.address) return null; return d.address.city || d.address.town || d.address.municipality || d.address.village || null; })
+    .catch(function() { return null; });
+}
+
+function reverseGeoInput(lat, lon) {
+  return fetch('https://nominatim.openstreetmap.org/reverse?lat=' + lat + '&lon=' + lon + '&format=json&zoom=10', { headers: { 'User-Agent': 'trajeto/1.0' } })
+    .then(function(r) { if (!r.ok) throw new Error('Nao foi possivel identificar sua localizacao'); return r.json(); })
+    .then(function(d) {
+      if (!d || !d.address) throw new Error('Nao foi possivel identificar sua localizacao');
+      var cidade = d.address.city || d.address.town || d.address.municipality || d.address.village || d.address.county || d.address.state;
+      var pais = d.address.country;
+      if (cidade && pais && cidade !== pais) return cidade + ', ' + pais;
+      return cidade || pais || d.display_name || null;
+    });
+}
+
+function estimateTimes(pts, geo, depH, spd) {
+  var c = geo.coordinates, cum = 0, dists = [0];
+  for (var i = 1; i < c.length; i++) { cum += haversine(c[i-1][1], c[i-1][0], c[i][1], c[i][0]); dists.push(cum); }
+  return pts.map(function(p) { return Object.assign({}, p, { hora: depH + ((dists[Math.min(p.idx, dists.length - 1)] || 0) / spd) }); });
+}
+
+function getWeather(pts, date) {
+  var lats = pts.map(function(p) { return p.lat.toFixed(3); }).join(',');
+  var lons = pts.map(function(p) { return p.lon.toFixed(3); }).join(',');
+  var url = 'https://api.open-meteo.com/v1/forecast?latitude=' + lats + '&longitude=' + lons + '&hourly=precipitation,precipitation_probability&timezone=America/Sao_Paulo&start_date=' + date + '&end_date=' + date;
+  return fetch(url)
+    .then(function(r) { if (!r.ok) throw new Error('Open-Meteo falhou'); return r.json(); })
+    .then(function(j) {
+      var locs = Array.isArray(j) ? j : [j];
+      return pts.map(function(p, i) {
+        var pr = locs[i].hourly.precipitation;
+        var pb = locs[i].hourly.precipitation_probability || [];
+        var hi = Math.min(23, Math.max(0, Math.round(p.hora)));
+        var s = Math.max(0, Math.round(pts[0].hora));
+        var e = Math.min(23, Math.round(pts[pts.length-1].hora) + 1);
+        var ctx = [];
+        for (var k = s; k <= e; k++) ctx.push({ h: k, mm: pr[k] || 0 });
+        return Object.assign({}, p, { mm: pr[hi] || 0, prob: pb[hi] || 0, ctx: ctx, ctxS: s });
+      });
+    });
+}
+
+function genWhatsApp(dados, oN, dN, date, hora, km) {
+  var mx = Math.max.apply(null, dados.map(function(d) { return d.mm; }));
+  var v;
+  if (mx < 0.1) v = '\u2705 Viagem seca';
+  else if (mx < 1) v = '\u2705 Viagem tranquila \u2014 garoa leve';
+  else if (mx < 5) v = '\u26a0\ufe0f Chuva leve em trechos';
+  else if (mx < 15) v = '\ud83c\udf27\ufe0f Chuva moderada \u2014 leve capa';
+  else v = '\ud83d\udea8 Chuva forte \u2014 considere adiar';
+  var t = '\ud83c\udfcd\ufe0f *Previsão de Chuva \u2014 ' + oN + ' \u2192 ' + dN + '*\n';
+  t += diaSemana(date) + ' ' + fmtDate(date) + ' \u2022 Saida ' + hora + ' \u2022 ~' + Math.round(km) + 'km\n\n';
+  t += '*' + v + '*\n\n\ud83d\udccd *Trecho a trecho:*\n\n';
+  dados.forEach(function(p) {
+    var c = classifica(p.mm);
+    t += horaStr(p.hora) + ' ' + p.nome + ' \u2192 *' + p.mm.toFixed(1) + 'mm* ' + c.tag.toLowerCase() + '\n';
+  });
+  t += '\n_Dados: Open-Meteo (GFS) \u2022 ' + new Date().toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' }) + '_';
+  t += '\n_Criado em Trajeto: https://trajetoapp.com.br/_';
+  return t;
+}
+
+function currentFormState() {
+  return {
+    origem: document.getElementById('origem').value.trim(),
+    destino: document.getElementById('destino').value.trim(),
+    data: document.getElementById('data').value,
+    hora: document.getElementById('hora').value,
+    velocidade: String(parseInt(document.getElementById('velocidade').value, 10) || 90)
+  };
+}
+
+function buildShareUrl(state, autorun) {
+  var url = new URL(window.location.href);
+  url.search = '';
+  url.hash = '';
+  if (state.origem) url.searchParams.set('origem', state.origem);
+  if (state.destino) url.searchParams.set('destino', state.destino);
+  if (state.data) url.searchParams.set('data', state.data);
+  if (state.hora) url.searchParams.set('hora', state.hora);
+  if (state.velocidade) url.searchParams.set('velocidade', state.velocidade);
+  if (autorun) url.searchParams.set('autorun', '1');
+  return url.toString();
+}
+
+function fillFormFromUrl() {
+  var params = new URLSearchParams(window.location.search);
+  var origem = params.get('origem');
+  var destino = params.get('destino');
+  var data = params.get('data');
+  var hora = params.get('hora');
+  var velocidade = parseInt(params.get('velocidade') || '', 10);
+
+  if (origem) document.getElementById('origem').value = origem;
+  if (destino) document.getElementById('destino').value = destino;
+  if (data) document.getElementById('data').value = data;
+  if (hora) document.getElementById('hora').value = hora;
+  if (!isNaN(velocidade)) {
+    document.getElementById('velocidade').value = Math.min(160, Math.max(40, velocidade));
+  }
+
+  return params.get('autorun') === '1';
+}
+
+function copyText(btnId, text, idleLabel, okLabel) {
+  navigator.clipboard.writeText(text).then(function() {
+    var b = document.getElementById(btnId);
+    b.textContent = okLabel;
+    setTimeout(function() { b.textContent = idleLabel; }, 2000);
+  });
+}
+
+function brandFooterHtml() {
+  return '' +
+    '<div class="site-brand">' +
+      '<img class="site-brand-mark" src="https://github.com/amadafoca.png?size=160" alt="Logo Amada Foca">' +
+      '<div class="site-brand-name">Amada Foca</div>' +
+      '<p class="site-brand-copy">Projeto publicado por Diogo Moreno. Gere a rota, compartilhe no WhatsApp e volte aqui para novas consultas.</p>' +
+      '<div class="site-brand-links">' +
+        '<a class="brand-chip" href="https://trajetoapp.com.br/" target="_blank" rel="noreferrer">' +
+          '<span class="brand-icon" aria-hidden="true">' +
+            '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10 14 21 3"/><path d="M21 3h-7"/><path d="M21 3v7"/><path d="M14 10v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V12a2 2 0 0 1 2-2h8"/></svg>' +
+          '</span>' +
+          '<span>trajetoapp.com.br</span>' +
+        '</a>' +
+        '<a class="brand-chip" href="https://www.instagram.com/diogomoreno/" target="_blank" rel="noreferrer">' +
+          '<span class="brand-icon" aria-hidden="true">' +
+            '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4.25"/><circle cx="17.5" cy="6.5" r="1"/></svg>' +
+          '</span>' +
+          '<span>@diogomoreno</span>' +
+        '</a>' +
+      '</div>' +
+    '</div>' +
+    '<span id="version" style="font-size:0.65rem;opacity:0.35;text-align:center;letter-spacing:0.05em;display:block;margin-top:1.5rem;">build 62427cd</span>';
+}
+
+function buildResults(dados, routeGeo, oN, dN, date, hora, km) {
+  var mx = Math.max.apply(null, dados.map(function(d) { return d.mm; }));
+  var mxC = Math.max.apply(null, dados.reduce(function(a, d) { return a.concat(d.ctx.map(function(c) { return c.mm; })); }, [0.1]));
+  var secos = dados.filter(function(d) { return d.mm < 0.1; }).length;
+
+  var v;
+  if (mx < 0.1) v = { i: '\u2705', t: 'Viagem seca \u2014 sem chuva no trajeto', c: '#34d399' };
+  else if (mx < 1) v = { i: '\u2705', t: 'Viagem tranquila \u2014 apenas garoa leve', c: '#34d399' };
+  else if (mx < 5) v = { i: '\u26a0\ufe0f', t: 'Chuva leve em alguns trechos', c: '#fbbf24' };
+  else if (mx < 15) v = { i: '\ud83c\udf27\ufe0f', t: 'Chuva moderada no trajeto', c: '#f97316' };
+  else v = { i: '\ud83d\udea8', t: 'Chuva forte \u2014 considere adiar', c: '#ef4444' };
+
+  var dicas = [];
+  var piores = dados.filter(function(d) { return d.mm >= 0.1; }).sort(function(a, b) { return b.mm - a.mm; });
+  if (piores.length) dicas.push('Trecho mais umido: ' + piores[0].nome + ' com ' + piores[0].mm.toFixed(1) + 'mm');
+  var ps = -1;
+  for (var i = Math.floor(dados.length / 2); i < dados.length; i++) { if (dados[i].mm < 0.1) { ps = i; break; } }
+  if (ps >= 0) dicas.push('De ' + dados[ps].nome + ' em diante: asfalto seco');
+  if (mx < 1) dicas.push('Nao precisa capa \u2014 jaqueta impermeavel resolve');
+  else if (mx < 5) dicas.push('Leve jaqueta impermeavel');
+  else dicas.push('Equipamento de chuva completo recomendado');
+  dicas.push('Reconfirme a previsão na vespera');
+
+  var html = '';
+  html += '<div class="header">';
+  html += '<button class="back-btn" onclick="voltarForm()">\u2190 Nova consulta</button>';
+  html += '<div class="badge">\ud83c\udfcd\ufe0f <span>' + oN + ' \u2192 ' + dN + '</span></div>';
+  html += '<h2>Previsao de Chuva na Rota</h2>';
+  html += '<p class="sub">' + diaSemana(date) + ', ' + fmtDate(date) + ' \u00b7 Saida ' + hora + ' \u00b7 ~' + Math.round(km) + 'km</p>';
+  html += '</div>';
+  html += '<div id="map"></div>';
+  html += '<div class="map-legend">';
+  html += '<div class="legend-item"><div class="legend-dot" style="background:#34d399"></div>Seco</div>';
+  html += '<div class="legend-item"><div class="legend-dot" style="background:#fbbf24"></div>Garoa</div>';
+  html += '<div class="legend-item"><div class="legend-dot" style="background:#f97316"></div>Chuva leve</div>';
+  html += '<div class="legend-item"><div class="legend-dot" style="background:#ef4444"></div>Moderada+</div>';
+  html += '<div class="legend-item"><div style="width:20px;height:3px;background:#818cf8;border-radius:2px"></div>Rota</div>';
+  html += '</div>';
+  html += '<div class="content">';
+  html += '<div class="verdict" style="background:' + v.c + '0d;border-color:' + v.c + '33">';
+  html += '<div style="font-size:26px;flex-shrink:0">' + v.i + '</div>';
+  html += '<div><div style="font-weight:600;font-size:14px;color:' + v.c + '">' + v.t + '</div>';
+  html += '<div style="color:#8b90a0;font-size:12px;margin-top:3px">Max ' + mx.toFixed(1) + 'mm \u00b7 ' + secos + '/' + dados.length + ' pontos secos</div></div></div>';
+  html += '<div class="sec-title">Previsão por trecho</div>';
+  html += '<div class="timeline"><div class="tl-line"></div>';
+
+  dados.forEach(function(p, idx) {
+    var c = classifica(p.mm);
+    var temCtx = p.ctx.some(function(x) { return x.mm > 0; });
+    html += '<div class="stop">';
+    html += '<div class="dot" style="border-color:' + c.cor + ';background:' + c.cor + '22" onclick="panTo(' + idx + ')"></div>';
+    html += '<div class="scard" onclick="panTo(' + idx + ')">';
+    html += '<div class="s-head"><span class="s-name">' + p.nome + '</span><span class="chip">' + horaStr(p.hora) + '</span></div>';
+    html += '<div class="s-data">';
+    html += '<div><div class="mv" style="color:' + c.cor + '">' + p.mm.toFixed(1) + 'mm</div><div class="ml">precipitacao</div></div>';
+    html += '<div><div class="mv" style="color:#8b90a0">' + p.prob + '%</div><div class="ml">probabilidade</div></div>';
+    html += '<div class="tag" style="background:' + c.bg + ';color:' + c.cor + '">' + c.tag + '</div>';
+    html += '</div>';
+    if (temCtx) {
+      html += '<div class="bars">';
+      p.ctx.forEach(function(b) {
+        var ht = Math.max((b.mm / mxC) * 24, 2);
+        var act = b.h === Math.round(p.hora);
+        html += '<div class="bar-col"><div class="bar" style="height:' + ht + 'px;background:' + (act ? '#fbbf24' : '#818cf8') + ';opacity:' + (act ? 1 : 0.35) + ';border-radius:2px 2px 0 0;min-height:2px;width:100%"></div><span class="bar-lbl">' + b.h + '</span></div>';
+      });
+      html += '</div>';
+    }
+    html += '</div></div>';
+  });
+
+  html += '</div>';
+  html += '<div class="notes"><h3>\ud83c\udfcd\ufe0f Dicas pro piloto</h3>';
+  dicas.forEach(function(d) { html += '<p>' + d + '</p>'; });
+  html += '</div>';
+  html += '<div class="footer">Dados ao vivo: Open-Meteo (GFS/ICON) + OpenStreetMap/OSRM<br>';
+  html += 'Consultado: ' + new Date().toLocaleString('pt-BR', { dateStyle: 'short', timeStyle: 'short' });
+  html += '<br><button class="btn-sm" onclick="location.reload()">\ud83d\udd04 Atualizar</button>';
+  html += '<button class="share-btn" id="share-btn">\ud83d\udd17 Copiar link</button>';
+  html += '<button class="wpp-btn" id="wpp-btn">\ud83d\udcf1 Copiar WhatsApp</button>';
+  html += brandFooterHtml();
+  html += '</div></div>';
+
+  var el = document.getElementById('results-screen');
+  el.innerHTML = html;
+  el.style.display = 'block';
+
+  history.replaceState(null, '', buildShareUrl(currentFormState(), true));
+
+  var wt = genWhatsApp(dados, oN, dN, date, hora, km);
+  document.getElementById('wpp-btn').addEventListener('click', function() {
+    copyText('wpp-btn', wt, '\ud83d\udcf1 Copiar WhatsApp', '\u2705 Copiado!');
+  });
+  document.getElementById('share-btn').addEventListener('click', function() {
+    copyText('share-btn', buildShareUrl(currentFormState(), true), '\ud83d\udd17 Copiar link', '\u2705 Link copiado!');
+  });
+
+  var map = L.map('map');
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+    attribution: '\u00a9 OSM \u00a9 CARTO', subdomains: 'abcd', maxZoom: 19
+  }).addTo(map);
+
+  if (routeGeo) {
+    L.polyline(routeGeo.coordinates.map(function(c) { return [c[1], c[0]]; }), {
+      color: '#818cf8', weight: 4, opacity: 0.7
+    }).addTo(map);
+  }
+
+  var markers = [];
+  dados.forEach(function(p, i) {
+    var c = classifica(p.mm);
+    var isE = i === 0 || i === dados.length - 1;
+    var sz = isE ? 16 : 12;
+    var ic = L.divIcon({
+      className: '',
+      html: '<div style="width:' + sz + 'px;height:' + sz + 'px;background:' + c.cor + ';border:' + (isE ? '3px solid white' : '2px solid ' + c.cor) + ';border-radius:50%;box-shadow:0 0 8px ' + c.cor + '66"></div>',
+      iconSize: [sz, sz], iconAnchor: [sz/2, sz/2]
+    });
+    var m = L.marker([p.lat, p.lon], { icon: ic }).addTo(map);
+    m.bindPopup('<div class="popup-name">' + p.nome + '</div><div><span class="popup-mm" style="color:' + c.cor + '">' + p.mm.toFixed(1) + 'mm</span><span class="popup-tag" style="background:' + c.bg + ';color:' + c.cor + '">' + c.tag + '</span></div><div class="popup-detail">Passagem: ' + horaStr(p.hora) + ' \u00b7 Prob: ' + p.prob + '%</div>', { closeButton: false });
+    markers.push(m);
+  });
+  map.fitBounds(L.featureGroup(markers).getBounds().pad(0.1));
+  window._m = markers;
+  window._map = map;
+}
+
+window.panTo = function(i) {
+  window._map.flyTo(window._m[i].getLatLng(), 11, { duration: 0.8 });
+  window._m[i].openPopup();
+};
+
+function voltarForm() {
+  document.getElementById('results-screen').style.display = 'none';
+  document.getElementById('results-screen').innerHTML = '';
+  document.getElementById('form-screen').style.display = 'block';
+  history.replaceState(null, '', buildShareUrl(currentFormState(), false));
+}
+
+function showLoad(t, s) {
+  document.getElementById('loading').style.display = 'flex';
+  document.getElementById('load-text').textContent = t;
+  document.getElementById('load-sub').textContent = s || '';
+}
+function hideLoad() { document.getElementById('loading').style.display = 'none'; }
+function showErr(m) {
+  var e = document.getElementById('error-msg');
+  e.textContent = m;
+  e.style.display = 'block';
+}
+
+function locateUser() {
+  var btn = document.getElementById('locate-btn');
+  var origem = document.getElementById('origem');
+  document.getElementById('error-msg').style.display = 'none';
+
+  if (!navigator.geolocation) {
+    showErr('Seu navegador nao suporta localizacao atual');
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = 'Localizando...';
+
+  navigator.geolocation.getCurrentPosition(function(pos) {
+    reverseGeoInput(pos.coords.latitude, pos.coords.longitude)
+      .then(function(nome) {
+        if (!nome) throw new Error('Nao foi possivel converter sua localizacao em origem');
+        origem.value = nome;
+        origem.focus();
+        btn.textContent = 'Localizacao detectada';
+        setTimeout(function() {
+          btn.textContent = 'Usar minha localização';
+          btn.disabled = false;
+        }, 1800);
+      })
+      .catch(function(err) {
+        showErr(err.message || 'Nao foi possivel usar sua localizacao atual');
+        btn.disabled = false;
+        btn.textContent = 'Usar minha localização';
+      });
+  }, function(err) {
+    var msg = 'Nao foi possivel usar sua localizacao atual';
+    if (err && err.code === 1) msg = 'Permissao de localizacao negada';
+    else if (err && err.code === 2) msg = 'Localizacao indisponivel no momento';
+    else if (err && err.code === 3) msg = 'Tempo esgotado ao buscar sua localizacao';
+    showErr(msg);
+    btn.disabled = false;
+    btn.textContent = 'Usar minha localização';
+  }, {
+    enableHighAccuracy: true,
+    timeout: 10000,
+    maximumAge: 300000
+  });
+}
+
+var tmr = new Date();
+tmr.setDate(tmr.getDate() + 1);
+document.getElementById('data').value = tmr.toISOString().split('T')[0];
+var shouldAutorun = fillFormFromUrl();
+document.getElementById('locate-btn').addEventListener('click', locateUser);
+
+document.getElementById('route-form').addEventListener('submit', function(e) {
+  e.preventDefault();
+  document.getElementById('error-msg').style.display = 'none';
+  var oQ = document.getElementById('origem').value.trim();
+  var dQ = document.getElementById('destino').value.trim();
+  var dt = document.getElementById('data').value;
+  var hr = document.getElementById('hora').value;
+  var spd = parseInt(document.getElementById('velocidade').value) || 90;
+  var depH = parseInt(hr.split(':')[0]) + parseInt(hr.split(':')[1]) / 60;
+
+  if (!oQ || !dQ || !dt || !hr) { showErr('Preencha todos os campos'); return; }
+  var btn = document.getElementById('submit-btn');
+  btn.disabled = true;
+  btn.textContent = 'Consultando...';
+
+  showLoad('Geocodificando cidades...', oQ + ' \u2192 ' + dQ);
+  Promise.all([geocode(oQ), geocode(dQ)])
+    .then(function(res) {
+      var orig = res[0], dest = res[1];
+      showLoad('Calculando rota rodoviaria...', orig.name + ' \u2192 ' + dest.name);
+      return getRoute(orig, dest).then(function(route) {
+        var nPts = Math.min(9, Math.max(3, Math.round(route.dist / 50)));
+        showLoad('Identificando cidades...', (nPts + 2) + ' pontos');
+        var pts = samplePoints(route.geometry, nPts, orig.name, dest.name);
+
+        var chain = Promise.resolve();
+        for (var i = 1; i < pts.length - 1; i++) {
+          (function(idx) {
+            chain = chain.then(function() {
+              return reverseGeo(pts[idx].lat, pts[idx].lon).then(function(nm) {
+                if (nm) pts[idx].nome = nm;
+                return new Promise(function(r) { setTimeout(r, 350); });
+              });
+            });
+          })(i);
+        }
+
+        return chain.then(function() {
+          showLoad('Estimando horarios...', spd + ' km/h media');
+          pts = estimateTimes(pts, route.geometry, depH, spd);
+          showLoad('Consultando previsão de chuva...', 'Open-Meteo \u00b7 ' + pts.length + ' pontos');
+          return getWeather(pts, dt);
+        }).then(function(dados) {
+          hideLoad();
+          document.getElementById('form-screen').style.display = 'none';
+          buildResults(dados, route.geometry, orig.name, dest.name, dt, hr, route.dist);
+        });
+      });
+    })
+    .catch(function(err) {
+      hideLoad();
+      showErr(err.message);
+    })
+    .finally(function() {
+      btn.disabled = false;
+      btn.textContent = 'Consultar previsão';
+    });
+});
+
+if (shouldAutorun) {
+  var autoState = currentFormState();
+  if (autoState.origem && autoState.destino && autoState.data && autoState.hora) {
+    document.getElementById('route-form').requestSubmit();
+  }
+}
+</script>
+
+<script>
+/* Autocomplete de cidades via Photon (komoot) */
+(function () {
+  var STATE_SIGLA = {"Acre":"AC","Alagoas":"AL","Amapá":"AP","Amazonas":"AM","Bahia":"BA","Ceará":"CE","Distrito Federal":"DF","Espírito Santo":"ES","Goiás":"GO","Maranhão":"MA","Mato Grosso":"MT","Mato Grosso do Sul":"MS","Minas Gerais":"MG","Pará":"PA","Paraíba":"PB","Paraná":"PR","Pernambuco":"PE","Piauí":"PI","Rio de Janeiro":"RJ","Rio Grande do Norte":"RN","Rio Grande do Sul":"RS","Rondônia":"RO","Roraima":"RR","Santa Catarina":"SC","São Paulo":"SP","Sergipe":"SE","Tocantins":"TO"};
+
+  function setupAC(inputEl) {
+    var list = inputEl.parentElement.querySelector('.ac-list');
+    var timer = null;
+    var activeIdx = -1;
+    var results = [];
+
+    function showList() { list.classList.add('ac-open'); }
+    function hideList() { list.classList.remove('ac-open'); activeIdx = -1; }
+    function clearActive() {
+      Array.from(list.children).forEach(function (li) { li.classList.remove('ac-active'); });
+    }
+
+    function selectItem(item) {
+      inputEl.value = item.display;
+      hideList();
+    }
+
+    function renderResults(items) {
+      results = items;
+      list.innerHTML = '';
+      activeIdx = -1;
+      items.forEach(function (item) {
+        var li = document.createElement('li');
+        var main = document.createElement('span');
+        main.className = 'ac-main';
+        main.textContent = item.main;
+        var sub = document.createElement('span');
+        sub.className = 'ac-sub';
+        sub.textContent = item.sub;
+        li.appendChild(main);
+        if (item.sub) li.appendChild(sub);
+        li.addEventListener('mousedown', function (e) {
+          e.preventDefault();
+          selectItem(item);
+        });
+        list.appendChild(li);
+      });
+      items.length ? showList() : hideList();
+    }
+
+    function fetchSuggestions(q) {
+      fetch(
+        'https://photon.komoot.io/api/?q=' + encodeURIComponent(q) + '&limit=5&bbox=-74,-34,-35,6&layer=city&lat=-22.9&lon=-43.2'
+      )
+        .then(function (r) { return r.json(); })
+        .then(function (data) {
+          var seen = {};
+          var items = [];
+          (data.features || []).forEach(function (f) {
+            var p = f.properties || {};
+            if ((p.countrycode || '').toUpperCase() !== 'BR') return;
+            var city = p.name || '';
+            if (!city) return;
+            var stateName = p.state || '';
+            var stateSub = STATE_SIGLA[stateName] || stateName;
+            var key = city + '|' + stateSub;
+            if (seen[key]) return;
+            seen[key] = true;
+            items.push({ main: city, sub: stateSub, display: city + (stateSub ? ', ' + stateSub : '') });
+          });
+          renderResults(items.slice(0, 5));
+        })
+        .catch(function () { hideList(); });
+    }
+
+    inputEl.addEventListener('input', function () {
+      clearTimeout(timer);
+      var q = inputEl.value.trim();
+      if (q.length < 3) { hideList(); return; }
+      timer = setTimeout(function () { fetchSuggestions(q); }, 300);
+    });
+
+    inputEl.addEventListener('keydown', function (e) {
+      if (!list.classList.contains('ac-open')) return;
+      var items = list.querySelectorAll('li');
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        clearActive();
+        activeIdx = (activeIdx + 1) % items.length;
+        items[activeIdx].classList.add('ac-active');
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        clearActive();
+        activeIdx = (activeIdx - 1 + items.length) % items.length;
+        items[activeIdx].classList.add('ac-active');
+      } else if (e.key === 'Enter') {
+        if (activeIdx >= 0 && results[activeIdx]) {
+          e.preventDefault();
+          selectItem(results[activeIdx]);
+        }
+      } else if (e.key === 'Escape') {
+        hideList();
+      }
+    });
+
+    inputEl.addEventListener('blur', function () {
+      setTimeout(hideList, 150);
+    });
+  }
+
+  document.addEventListener('DOMContentLoaded', function () {
+    setupAC(document.getElementById('origem'));
+    setupAC(document.getElementById('destino'));
+  });
+
+  document.addEventListener('click', function (e) {
+    ['origem', 'destino'].forEach(function (id) {
+      var el = document.getElementById(id);
+      if (el && !el.parentElement.contains(e.target)) {
+        var list = el.parentElement.querySelector('.ac-list');
+        if (list) list.classList.remove('ac-open');
+      }
+    });
+  });
+})();
+</script>
+</body>
+</html>
