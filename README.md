@@ -1,82 +1,71 @@
-# 🏍️ trajeto
+# Trajeto
 
 Previsão de chuva trecho a trecho para viagens de moto no Brasil.
 
-Digita origem, destino, data e horário — o app calcula a rota, consulta a previsão hora a hora e mostra no mapa com relatório detalhado.
+Informe origem, destino, data, horário e velocidade média — o app calcula a rota, consulta a previsão hora a hora e mostra no mapa com relatório detalhado.
 
 ## Stack
 
-- **Frontend:** Vanilla HTML/CSS/JS (zero build, zero framework)
+- **Frontend:** Vanilla HTML/CSS/JS (zero framework)
 - **Mapa:** Leaflet.js + OpenStreetMap (CARTO dark tiles)
-- **Rota:** OSRM (Open Source Routing Machine)
-- **Geocoding:** Nominatim (OpenStreetMap)
+- **Roteamento:** GraphHopper (primário, com API key) + OSRM (fallback público)
+- **Autocomplete:** Photon API (photon.komoot.io)
+- **Geocoding:** Nominatim (geocoding e reverse geocoding)
 - **Clima:** Open-Meteo API (modelo GFS/ICON)
-- **Custo:** 100% gratuito, sem API keys
 
 ## Deploy
 
-```bash
-# 1. Cria o repo no GitHub (pode ser pelo site ou CLI)
-gh repo create trajeto --public
+Push no branch `main` dispara o workflow de deploy automaticamente:
 
-# 2. Na pasta do projeto
-cd trajeto
-git init
-git add .
-git commit -m "initial commit"
-git branch -M main
-git remote add origin https://github.com/amadafoca/trajeto.git
-git push -u origin main
+1. GitHub Actions (`.github/workflows/deploy.yml`) é acionado a cada push em `main`.
+2. O workflow injeta o SHA curto do commit no placeholder `<!--BUILD-->` do `index.html`.
+3. O resultado é publicado no branch `gh-pages` via `peaceiris/actions-gh-pages`.
+4. GitHub Pages serve o site a partir de `gh-pages` (root).
+5. Domínio: **trajetoapp.com.br** (CNAME configurado no repo).
 
-# 3. Se usar GitHub Pages, ativa em:
-# → Settings > Pages > Source: Deploy from branch > main > / (root) > Save
-
-# 4. Configura o domínio próprio:
-# → Settings > Pages > Custom domain > trajetoapp.com.br
-# → ou publica o conteúdo estático na raiz do seu host
-
-# 5. Acessa em: https://trajetoapp.com.br/
-```
+> Não faça push diretamente no branch `gh-pages` — ele é gerenciado pelo GitHub Actions.
 
 ## Estrutura
 
 ```
 trajeto/
-├── index.html          # Página principal
-├── css/
-│   └── style.css       # Tema escuro
-├── js/
-│   ├── app.js          # Orquestrador principal
-│   ├── geocode.js      # Nominatim geocoding
-│   ├── route.js        # OSRM rota + sampling
-│   ├── weather.js      # Open-Meteo + classificação
-│   └── ui.js           # Renderização mapa + report
+├── .agents/
+│   └── AGENTS.md              # Instruções de branding e agentes
+├── .github/
+│   └── workflows/
+│       └── deploy.yml         # CI/CD — deploy automático
+├── assets/
+│   ├── v0/                    # Assets originais (ícone, wordmark, favicon)
+│   └── v1/                    # Assets atualizados (favicons, OG image, logos)
+├── CLAUDE.md                  # Instruções para agentes de código
+├── CNAME                      # Domínio customizado (trajetoapp.com.br)
+├── index.html                 # Aplicação completa (HTML + CSS + JS inline)
 └── README.md
 ```
 
 ## Funcionalidades
 
 - Formulário com origem, destino, data, hora e velocidade média
-- Geocoding automático de cidades brasileiras
-- Rota rodoviária real (não linha reta)
-- Pontos intermediários amostrados automaticamente
-- Reverse geocoding dos pontos (identifica cidade/município)
-- Previsão de precipitação (mm) e probabilidade (%) por hora
-- Mapa interativo com markers coloridos por classificação
+- Autocomplete de cidades brasileiras (Photon API)
+- Geocoding automático e reverse geocoding dos pontos intermediários
+- Rota rodoviária real com fallback automático (GraphHopper → OSRM)
+- Pontos intermediários amostrados ao longo da rota
+- Previsão de precipitação (mm), probabilidade (%) e temperatura prevista por trecho
+- Exibição de temperatura nos cards das cidades
+- Mapa interativo com markers coloridos por classificação de chuva
 - Timeline clicável (sincroniza com mapa)
 - Classificação: seco / garoa / chuva leve / moderada / forte
-- Veredicto automático + dicas pro piloto
-- Botão copiar mensagem formatada WhatsApp
+- Veredicto automático + dicas para o piloto
+- Link para rota no Google Maps (travelmode=two-wheeler)
+- Link compartilhável via WhatsApp com resumo da previsão
 
-## APIs utilizadas (todas gratuitas e sem chave)
+## APIs utilizadas
 
-| API | Uso | Rate limit |
-|-----|-----|-----------|
-| Nominatim | Geocoding | 1 req/s |
-| OSRM | Rota rodoviária | Sem limite publicado |
-| Open-Meteo | Previsão hora a hora | Ilimitado (non-commercial) |
-| CARTO | Tiles do mapa | Ilimitado |
-
-## Licença
-
-MIT
+| API | Uso | Observação |
+|-----|-----|------------|
+| GraphHopper | Roteamento primário | Requer API key |
+| OSRM | Roteamento fallback | Público, sem chave |
+| Photon | Autocomplete de cidades | Público, sem chave |
+| Nominatim | Geocoding e reverse geocoding | 1 req/s |
+| Open-Meteo | Previsão hora a hora | Gratuito (non-commercial) |
+| CARTO | Tiles do mapa | Gratuito |
