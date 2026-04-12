@@ -69,7 +69,3 @@ trajeto/
 | Nominatim | Geocoding e reverse geocoding | 1 req/s |
 | Open-Meteo | Previsão hora a hora | Gratuito (non-commercial) |
 | CARTO | Tiles do mapa | Gratuito |
-
-## Licença
-
-MIT
